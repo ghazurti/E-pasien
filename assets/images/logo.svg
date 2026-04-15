@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <!-- Top-left green leaf -->
+  <path d="M 30 30 Q 30 260 260 260 Q 260 30 30 30 Z" fill="#009B3A"/>
+  <!-- Darker overlap area -->
+  <path d="M 165 260 Q 165 165 260 165 Q 260 260 165 260 Z" fill="#007A2E"/>
+  <!-- Green circle (head) -->
+  <circle cx="105" cy="105" r="55" fill="#009B3A"/>
+  <!-- Bottom-right yellow leaf -->
+  <path d="M 470 470 Q 470 240 240 240 Q 240 470 470 470 Z" fill="#F5C800"/>
+  <!-- Darker overlap area yellow -->
+  <path d="M 335 240 Q 335 335 240 335 Q 240 240 335 240 Z" fill="#C9A500"/>
+  <!-- Yellow circle -->
+  <circle cx="395" cy="395" r="55" fill="#F5C800"/>
+</svg>
