@@ -1,98 +1,156 @@
-# Flutter E-Pasien
+# SiSehat Bau-Bau — Aplikasi E-Pasien
 
-Aplikasi mobile untuk sistem E-Pasien menggunakan Flutter dengan BLoC pattern.
+Aplikasi mobile Flutter untuk sistem layanan kesehatan **RSUD Bau-Bau**, memungkinkan pasien mengakses berbagai layanan rumah sakit secara digital.
 
-## 🚀 Quick Start
+---
 
-### Prerequisites
+## Fitur Aplikasi
 
-- Flutter SDK 3.38.7 atau lebih baru
-- Backend Rust API running di `http://localhost:3000`
+| Fitur | Keterangan |
+|---|---|
+| Login / Autentikasi | JWT, auto-login, logout |
+| Beranda | Info rumah sakit, berita kesehatan |
+| Booking Poli | Daftar poli, pilih dokter & jadwal |
+| Antrian | Cek nomor antrian real-time |
+| Hasil Laboratorium | Lihat & download PDF hasil lab |
+| Hasil Radiologi | Riwayat pemeriksaan radiologi |
+| Rekam Medis | Riwayat kunjungan pasien |
+| Riwayat Obat | Daftar resep & obat yang pernah diterima |
+| Surat Kontrol | Surat rujukan & kontrol dokter |
+| Notifikasi Push | FCM — info antrian, hasil lab, dll |
 
-### Installation
+---
 
-```bash
-# Clone atau navigate ke project
-cd /Users/ghazur_it/Documents/E-Pasien/flutter_epasien
-
-# Install dependencies
-flutter pub get
-
-# Run app
-flutter run
-```
-
-## 📱 Features
-
-- ✅ **Authentication**: Login dengan JWT, auto-login, logout
-- ✅ **Jadwal Dokter**: Lihat dan filter jadwal dokter berdasarkan hari
-- ✅ **Booking Poli**: Buat booking poli dengan form validation
-- ✅ **Profile Management**: Lihat profil dan ganti password
-
-## 🏗️ Architecture
-
-### State Management: BLoC Pattern
+## Arsitektur
 
 ```
 lib/
-├── blocs/          # Business Logic Components
-│   ├── auth/       # Authentication BLoC
-│   ├── jadwal/     # Jadwal BLoC
-│   ├── booking/    # Booking BLoC
-│   └── profile/    # Profile BLoC
+├── blocs/          # State management (BLoC pattern)
+│   └── auth/
+├── config/         # API URL, tema warna
 ├── models/         # Data models
-├── services/       # API & Storage services
-├── screens/        # UI screens
-├── widgets/        # Reusable widgets
-└── config/         # Configuration (API, Theme)
+├── screens/        # Halaman UI
+├── services/       # API calls, cache, storage
+├── utils/          # Helper (PDF generator, dll)
+└── main.dart
 ```
 
-### Dependencies
+**Stack:** Flutter 3.x · BLoC · Firebase FCM · Rust Backend API
 
-- `flutter_bloc` - State management
-- `http` - HTTP client
-- `flutter_secure_storage` - Secure JWT storage
-- `google_fonts` - Typography
-- `intl` - Date formatting
+---
 
-## 🔧 Configuration
+## Setup & Instalasi
 
-### API Base URL
+### 1. Prerequisites
+
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) versi **3.10** ke atas
+- Android Studio / VS Code
+- Akun [Firebase Console](https://console.firebase.google.com/)
+- Backend Rust API (lihat repo backend)
+
+### 2. Clone & Install Dependencies
+
+```bash
+git clone https://github.com/ghazurti/E-pasien.git
+cd E-pasien
+flutter pub get
+```
+
+### 3. Konfigurasi API URL
 
 Edit `lib/config/api_config.dart`:
 
 ```dart
-// For emulator
-static const String baseUrl = 'http://localhost:3000/api';
+// Emulator Android
+static const String baseUrl = 'http://10.0.2.2:3000';
 
-// For physical device (ganti dengan IP komputer Anda)
-static const String baseUrl = 'http://192.168.x.x:3000/api';
+// Device fisik (ganti dengan IP komputer di jaringan yang sama)
+static const String baseUrl = 'http://192.168.x.x:3000';
 ```
 
-## 🧪 Testing
+---
+
+## Setup Firebase (Push Notification)
+
+Aplikasi ini menggunakan **Firebase Cloud Messaging (FCM)** untuk notifikasi push. File `google-services.json` tidak disertakan di repo karena alasan keamanan — ikuti langkah berikut untuk mengaktifkannya.
+
+### Langkah 1 — Buat Project Firebase
+
+1. Buka [Firebase Console](https://console.firebase.google.com/)
+2. Klik **"Add project"**
+3. Beri nama project, contoh: `SiSehat-BauBau`
+4. Klik **Continue** → pilih atau nonaktifkan Google Analytics → **Create project**
+
+### Langkah 2 — Tambahkan Aplikasi Android
+
+1. Di halaman project Firebase, klik ikon **Android** (Add app)
+2. Isi **Android package name** sesuai yang ada di `android/app/build.gradle.kts`:
+   ```
+   com.example.flutter_epasien
+   ```
+3. Isi **App nickname** (opsional): `SiSehat Bau-Bau`
+4. Klik **Register app**
+
+### Langkah 3 — Download google-services.json
+
+1. Setelah register, klik **Download google-services.json**
+2. Salin file tersebut ke:
+   ```
+   android/app/google-services.json
+   ```
+3. File ini **JANGAN di-commit** ke Git (sudah ada di `.gitignore`)
+
+### Langkah 4 — Aktifkan Cloud Messaging
+
+1. Di Firebase Console, buka **Build → Cloud Messaging**
+2. Pastikan **Firebase Cloud Messaging API (V1)** sudah aktif
+3. Jika belum, klik **Enable**
+
+### Langkah 5 — Jalankan Aplikasi
 
 ```bash
-# Analyze code
-flutter analyze
-
-# Run app in debug mode
 flutter run
-
-# Build APK
-flutter build apk
 ```
 
-## 📚 Documentation
+Saat pertama kali dijalankan, aplikasi akan meminta izin notifikasi. Token FCM akan otomatis dikirim ke backend.
 
-Lihat dokumentasi lengkap di artifacts folder.
+### Verifikasi FCM
 
-## 🎨 Design
+Untuk menguji notifikasi dari Firebase Console:
 
-- Material 3 Design
-- Google Fonts (Poppins & Inter)
-- Modern gradient colors
-- Responsive layouts
+1. Buka **Cloud Messaging → Send your first message**
+2. Isi judul dan isi pesan
+3. Pilih **Target → Single device**
+4. Paste token FCM dari log debug aplikasi
+5. Klik **Send test message**
 
-## 📝 License
+---
 
-Private project untuk E-Pasien system.
+## Build APK
+
+```bash
+# Debug
+flutter build apk --debug
+
+# Release
+flutter build apk --release
+```
+
+Output: `build/app/outputs/flutter-apk/`
+
+---
+
+## Menjalankan Backend
+
+Pastikan backend Rust sudah berjalan sebelum menjalankan aplikasi:
+
+```bash
+cd ../backend-rust
+cargo run
+```
+
+---
+
+## Lisensi
+
+Project ini merupakan sistem internal RSUD Bau-Bau. Seluruh hak cipta dilindungi.
