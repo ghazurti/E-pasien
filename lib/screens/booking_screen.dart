@@ -13,9 +13,6 @@ import 'package:flutter_epasien/blocs/jadwal/jadwal_state.dart';
 import 'package:flutter_epasien/config/theme.dart';
 import 'package:flutter_epasien/models/booking.dart';
 import 'package:flutter_epasien/models/jadwal.dart';
-import 'package:flutter_epasien/widgets/custom_button.dart';
-import 'package:flutter_epasien/widgets/custom_textfield.dart';
-import 'package:flutter_epasien/widgets/loading_widget.dart';
 
 class BookingScreen extends StatefulWidget {
   final Jadwal? selectedJadwal;
@@ -29,11 +26,11 @@ class BookingScreen extends StatefulWidget {
 class _BookingScreenState extends State<BookingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _keluhanController = TextEditingController();
-  
+
   DateTime? _selectedDate;
   String? _selectedPoliCode;
   String? _selectedDokterCode;
-  String _selectedCaraBayar = 'BPJ'; // Default to BPJS
+  String _selectedCaraBayar = 'BPJ';
 
   final List<Map<String, String>> _caraBayarList = [
     {'code': 'BPJ', 'name': 'BPJS'},
@@ -43,14 +40,10 @@ class _BookingScreenState extends State<BookingScreen> {
   @override
   void initState() {
     super.initState();
-    // Trigger load if not already loaded or loading
     final jadwalState = context.read<JadwalBloc>().state;
     if (jadwalState is JadwalInitial) {
       context.read<JadwalBloc>().add(LoadJadwal());
     }
-    
-    // Note: Pre-selection from jadwal is removed to avoid dropdown errors
-    // User will select poli and dokter manually after choosing date
   }
 
   @override
@@ -65,12 +58,17 @@ class _BookingScreenState extends State<BookingScreen> {
       initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now().add(const Duration(days: 1)),
       lastDate: DateTime.now().add(const Duration(days: 30)),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.light(primary: AppTheme.primaryColor),
+        ),
+        child: child!,
+      ),
     );
-    
+
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
-        // Reset doctor selection when date changes because available doctors may change
         _selectedDokterCode = null;
       });
     }
@@ -80,22 +78,12 @@ class _BookingScreenState extends State<BookingScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pilih tanggal periksa terlebih dahulu'),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
+      _showSnack('Pilih tanggal periksa terlebih dahulu', isError: true);
       return;
     }
 
     if (_selectedPoliCode == null || _selectedDokterCode == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pilih Poliklinik dan Dokter terlebih dahulu'),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
+      _showSnack('Pilih Poliklinik dan Dokter terlebih dahulu', isError: true);
       return;
     }
 
@@ -105,6 +93,18 @@ class _BookingScreenState extends State<BookingScreen> {
     }
 
     _proceedBooking();
+  }
+
+  void _showSnack(String msg, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, style: const TextStyle(fontWeight: FontWeight.w500)),
+        backgroundColor: isError ? AppTheme.errorColor : AppTheme.primaryColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   Future<void> _showBpjsRujukanDialog() async {
@@ -130,9 +130,7 @@ class _BookingScreenState extends State<BookingScreen> {
             backgroundColor: AppTheme.primaryColor,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 5),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -154,11 +152,33 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
+  IconData _poliIcon(String name) {
+    final n = name.toLowerCase();
+    if (n.contains('anak')) return Icons.child_care_rounded;
+    if (n.contains('gigi')) return Icons.medication_rounded;
+    if (n.contains('mata')) return Icons.visibility_rounded;
+    if (n.contains('jantung') || n.contains('kardio')) return Icons.favorite_rounded;
+    if (n.contains('bedah')) return Icons.healing_rounded;
+    if (n.contains('kulit')) return Icons.face_rounded;
+    if (n.contains('paru') || n.contains('dalam')) return Icons.air_rounded;
+    if (n.contains('saraf')) return Icons.psychology_rounded;
+    if (n.contains('kandungan') || n.contains('obgyn')) return Icons.pregnant_woman_rounded;
+    if (n.contains('tht')) return Icons.hearing_rounded;
+    return Icons.local_hospital_rounded;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: const Text('Booking Poli'),
+        title: const Text(
+          'Booking Poli',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        backgroundColor: AppTheme.primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: BlocListener<BookingBloc, BookingState>(
         listener: (context, state) {
@@ -167,46 +187,42 @@ class _BookingScreenState extends State<BookingScreen> {
               SnackBar(
                 content: Row(
                   children: [
-                    const Icon(Icons.check_circle, color: Colors.white),
+                    const Icon(Icons.check_circle_rounded, color: Colors.white),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         state.message,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                       ),
                     ),
                   ],
                 ),
                 backgroundColor: AppTheme.successColor,
                 behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 margin: const EdgeInsets.all(16),
                 duration: const Duration(seconds: 3),
               ),
             );
-            Navigator.pop(context); // Kembali setelah sukses
+            Navigator.pop(context);
           } else if (state is BookingError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Row(
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.white),
+                    const Icon(Icons.error_outline_rounded, color: Colors.white),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         state.message,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                       ),
                     ),
                   ],
                 ),
                 backgroundColor: AppTheme.errorColor,
                 behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 margin: const EdgeInsets.all(16),
                 duration: const Duration(seconds: 4),
               ),
@@ -216,15 +232,16 @@ class _BookingScreenState extends State<BookingScreen> {
         child: BlocBuilder<JadwalBloc, JadwalState>(
           builder: (context, jadwalState) {
             if (jadwalState is JadwalInitial || jadwalState is JadwalLoading) {
-              return const LoadingWidget(message: 'Memuat data poliklinik...');
+              return const Center(
+                child: CircularProgressIndicator(color: AppTheme.primaryColor),
+              );
             }
-            
+
             if (jadwalState is JadwalError) {
-              return Center(child: Text('Error: ${jadwalState.message}'));
+              return _buildErrorState(jadwalState.message);
             }
 
             if (jadwalState is JadwalLoaded) {
-              // Extract unique polis
               final List<Jadwal> allJadwal = jadwalState.jadwalList;
               final Map<String, String> poliMap = {};
               for (var j in allJadwal) {
@@ -232,349 +249,72 @@ class _BookingScreenState extends State<BookingScreen> {
               }
               final List<String> poliCodes = poliMap.keys.toList();
 
-              // Get day name from selected date
               String? selectedDayName;
               if (_selectedDate != null) {
-                final dayIndex = _selectedDate!.weekday; // 1=Monday, 7=Sunday
                 const dayNames = ['SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU', 'AKHAD'];
-                selectedDayName = dayNames[dayIndex - 1];
+                selectedDayName = dayNames[_selectedDate!.weekday - 1];
               }
 
-              // Get doctors for selected poli and date
               List<Jadwal> doctorsInPoli = [];
               if (_selectedPoliCode != null) {
                 doctorsInPoli = allJadwal.where((j) {
-                  // Filter by poli
                   if (j.kdPoli != _selectedPoliCode) return false;
-                  
-                  // If date is selected, also filter by day
                   if (selectedDayName != null) {
                     return j.hariKerja.toUpperCase() == selectedDayName;
                   }
-                  
                   return true;
                 }).toList();
               }
 
               return SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Info jam pendaftaran
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: const [
-                                Icon(
-                                  Icons.access_time_rounded,
-                                  size: 16,
-                                  color: Color(0xFF3B82F6),
-                                ),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Jam Pendaftaran Poli',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1D4ED8),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            const _JamRow(
-                              hari: 'Senin – Kamis',
-                              jam: '08:00 – 12:00',
-                            ),
-                            const SizedBox(height: 4),
-                            const _JamRow(
-                              hari: "Jum'at",
-                              jam: '08:00 – 11:00',
-                            ),
-                            const SizedBox(height: 10),
-                            const Divider(height: 1),
-                            const SizedBox(height: 10),
-                            GestureDetector(
-                              onTap: () async {
-                                final uri = Uri.parse(
-                                  'https://wa.me/6282292595705',
-                                );
-                                if (await canLaunchUrl(uri)) {
-                                  await launchUrl(
-                                    uri,
-                                    mode: LaunchMode.externalApplication,
-                                  );
-                                }
-                              },
-                              child: Row(
-                                children: const [
-                                  Icon(
-                                    Icons.chat_rounded,
-                                    size: 15,
-                                    color: Color(0xFF25D366),
-                                  ),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    '+62 822-9259-5705',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Color(0xFF1D4ED8),
-                                      fontWeight: FontWeight.w600,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    '(WhatsApp)',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Color(0xFF25D366),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Tanggal Periksa
-                      InkWell(
-                        onTap: _selectDate,
-                        child: InputDecorator(
-                          decoration: InputDecoration(
-                            labelText: 'Tanggal Periksa',
-                            prefixIcon: const Icon(Icons.calendar_today),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            _selectedDate == null
-                                ? 'Pilih tanggal'
-                                : DateFormat('dd MMMM yyyy', 'id_ID').format(_selectedDate!),
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                        ),
-                      ),
+                      _buildInfoCard(),
                       const SizedBox(height: 16),
 
-
-                      // Poliklinik Dropdown
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedPoliCode,
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                          labelText: 'Pilih Poliklinik',
-                          labelStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.local_hospital,
-                            color: AppTheme.primaryColor,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!, width: 1.5),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                        ),
-                        icon: const Icon(Icons.arrow_drop_down_circle, color: AppTheme.primaryColor),
-                        dropdownColor: Colors.white,
-                        items: poliCodes.map((code) {
-                          final poliName = poliMap[code]!;
-                          IconData poliIcon = Icons.medical_services;
-                          
-                          // Assign icons based on poli name
-                          if (poliName.toLowerCase().contains('anak')) {
-                            poliIcon = Icons.child_care;
-                          } else if (poliName.toLowerCase().contains('gigi')) {
-                            poliIcon = Icons.medication;
-                          } else if (poliName.toLowerCase().contains('mata')) {
-                            poliIcon = Icons.visibility;
-                          } else if (poliName.toLowerCase().contains('jantung') || poliName.toLowerCase().contains('kardio')) {
-                            poliIcon = Icons.favorite;
-                          } else if (poliName.toLowerCase().contains('bedah')) {
-                            poliIcon = Icons.healing;
-                          } else if (poliName.toLowerCase().contains('kulit')) {
-                            poliIcon = Icons.face;
-                          } else if (poliName.toLowerCase().contains('paru') || poliName.toLowerCase().contains('dalam')) {
-                            poliIcon = Icons.air;
-                          } else if (poliName.toLowerCase().contains('saraf')) {
-                            poliIcon = Icons.psychology;
-                          } else if (poliName.toLowerCase().contains('kandungan') || poliName.toLowerCase().contains('obgyn')) {
-                            poliIcon = Icons.pregnant_woman;
-                          } else if (poliName.toLowerCase().contains('tht')) {
-                            poliIcon = Icons.hearing;
-                          }
-                          
-                          return DropdownMenuItem<String>(
-                            value: code,
-                            child: Row(
-                              children: [
-                                Icon(poliIcon, size: 20, color: AppTheme.primaryColor),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    poliName,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedPoliCode = value;
-                            _selectedDokterCode = null; // Reset dokter saat poli ganti
-                          });
-                        },
-                        validator: (value) => value == null ? 'Pilih poliklinik' : null,
-                      ),
+                      // Form card
+                      _buildFormCard(poliCodes, poliMap, doctorsInPoli),
                       const SizedBox(height: 16),
 
-                      // Dokter Dropdown
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedDokterCode,
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                          labelText: 'Pilih Dokter',
-                          prefixIcon: const Icon(Icons.person),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          hintText: _selectedDate == null 
-                              ? 'Pilih tanggal terlebih dahulu'
-                              : _selectedPoliCode == null 
-                                  ? 'Pilih poliklinik terlebih dahulu' 
-                                  : doctorsInPoli.isEmpty
-                                      ? 'Tidak ada dokter tersedia pada hari ini'
-                                      : null,
-                        ),
-                        items: doctorsInPoli.map((j) {
-                          return DropdownMenuItem<String>(
-                            value: j.kdDokter,
-                            child: Text(j.nmDokter),
-                          );
-                        }).toList(),
-                        onChanged: (_selectedDate == null || _selectedPoliCode == null) 
-                          ? null 
-                          : (value) {
-                              setState(() {
-                                _selectedDokterCode = value;
-                              });
-                            },
-                        validator: (value) => value == null ? 'Pilih dokter' : null,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Cara Bayar Dropdown
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedCaraBayar,
-                        decoration: InputDecoration(
-                          labelText: 'Cara Bayar',
-                          prefixIcon: const Icon(Icons.payment),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        items: _caraBayarList.map((item) {
-                          return DropdownMenuItem<String>(
-                            value: item['code'],
-                            child: Text(item['name']!),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedCaraBayar = value!;
-                          });
-                        },
-                      ),
-                      if (_selectedCaraBayar == 'BPJ') ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFFBEB),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: const Color(0xFFF59E0B),
-                              width: 1,
-                            ),
-                          ),
-                          child: const Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                Icons.info_outline_rounded,
-                                size: 16,
-                                color: Color(0xFFF59E0B),
-                              ),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'BPJS memerlukan surat rujukan dari Puskesmas atau Dokter Praktek. Akan ditanyakan saat konfirmasi.',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF78350F),
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-
-                      // Keluhan Field
-                      CustomTextField(
-                        label: 'Keluhan / Alasan (Opsional)',
-                        hint: 'Contoh: Pusing, Batuk, Kontrol rutin',
-                        controller: _keluhanController,
-                        prefixIcon: Icons.description,
-                        maxLines: 2,
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      // Submit Button
+                      // Submit button
                       BlocBuilder<BookingBloc, BookingState>(
                         builder: (context, state) {
-                          return CustomButton(
-                            text: 'Konfirmasi Booking',
-                            onPressed: _handleSubmit,
-                            isLoading: state is BookingLoading,
-                            icon: Icons.check_circle,
+                          final isLoading = state is BookingLoading;
+                          return SizedBox(
+                            height: 52,
+                            child: ElevatedButton.icon(
+                              onPressed: isLoading ? null : _handleSubmit,
+                              icon: isLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.check_circle_rounded, size: 20),
+                              label: Text(
+                                isLoading ? 'Memproses...' : 'Konfirmasi Booking',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.primaryColor,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                            ),
                           );
                         },
                       ),
@@ -583,27 +323,424 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
               );
             }
-            
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.orange),
-                  const SizedBox(height: 16),
-                  const Text('Gagal memuat data jadwal.'),
-                  const SizedBox(height: 8),
-                  Text('State: ${jadwalState.runtimeType}', style: const TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.read<JadwalBloc>().add(LoadJadwal()),
-                    child: const Text('Coba Lagi'),
-                  ),
-                ],
-              ),
-            );
+
+            return _buildErrorState('Gagal memuat data jadwal');
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF3B82F6)),
+              SizedBox(width: 8),
+              Text(
+                'Jam Pendaftaran Poli',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1D4ED8),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const _JamRow(hari: 'Senin – Kamis', jam: '08:00 – 12:00'),
+          const SizedBox(height: 4),
+          const _JamRow(hari: "Jum'at", jam: '08:00 – 11:00'),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: Color(0xFFBFDBFE)),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () async {
+              final uri = Uri.parse('https://wa.me/6282292595705');
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: Row(
+              children: const [
+                Icon(Icons.chat_rounded, size: 15, color: Color(0xFF25D366)),
+                SizedBox(width: 6),
+                Text(
+                  '+62 822-9259-5705',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF1D4ED8),
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+                SizedBox(width: 6),
+                Text(
+                  '(WhatsApp)',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF25D366),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormCard(
+    List<String> poliCodes,
+    Map<String, String> poliMap,
+    List<Jadwal> doctorsInPoli,
+  ) {
+    final inputBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: Colors.grey[200]!),
+    );
+    final focusedBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+    );
+
+    InputDecoration fieldDecor({
+      required String label,
+      required IconData icon,
+      String? hint,
+    }) {
+      return InputDecoration(
+        labelText: label,
+        hintText: hint,
+        hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
+        labelStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
+        prefixIcon: Icon(icon, color: AppTheme.primaryColor, size: 20),
+        filled: true,
+        fillColor: Colors.grey[50],
+        border: inputBorder,
+        enabledBorder: inputBorder,
+        focusedBorder: focusedBorder,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionLabel(label: 'Jadwal Kunjungan', icon: Icons.event_rounded),
+          const SizedBox(height: 12),
+
+          // Tanggal
+          InkWell(
+            onTap: _selectDate,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _selectedDate != null
+                      ? AppTheme.primaryColor.withValues(alpha: 0.5)
+                      : Colors.grey[200]!,
+                  width: _selectedDate != null ? 1.5 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today_rounded,
+                    color: AppTheme.primaryColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _selectedDate == null
+                          ? 'Pilih tanggal periksa'
+                          : DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(_selectedDate!),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: _selectedDate == null ? Colors.grey[400] : const Color(0xFF1E293B),
+                        fontWeight: _selectedDate != null ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey[400]),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          _SectionLabel(label: 'Pilih Poli & Dokter', icon: Icons.local_hospital_rounded),
+          const SizedBox(height: 12),
+
+          // Poli dropdown
+          DropdownButtonFormField<String>(
+            value: _selectedPoliCode,
+            isExpanded: true,
+            decoration: fieldDecor(label: 'Poliklinik', icon: Icons.local_hospital_rounded),
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.primaryColor),
+            dropdownColor: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            items: poliCodes.map((code) {
+              final name = poliMap[code]!;
+              return DropdownMenuItem<String>(
+                value: code,
+                child: Row(
+                  children: [
+                    Icon(_poliIcon(name), size: 18, color: AppTheme.primaryColor),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedPoliCode = value;
+                _selectedDokterCode = null;
+              });
+            },
+            validator: (value) => value == null ? 'Pilih poliklinik' : null,
+          ),
+          const SizedBox(height: 12),
+
+          // Dokter dropdown
+          DropdownButtonFormField<String>(
+            value: _selectedDokterCode,
+            isExpanded: true,
+            decoration: fieldDecor(
+              label: 'Dokter',
+              icon: Icons.person_rounded,
+              hint: _selectedDate == null
+                  ? 'Pilih tanggal dahulu'
+                  : _selectedPoliCode == null
+                      ? 'Pilih poliklinik dahulu'
+                      : doctorsInPoli.isEmpty
+                          ? 'Tidak ada dokter hari ini'
+                          : null,
+            ),
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.primaryColor),
+            dropdownColor: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            items: doctorsInPoli.map((j) {
+              return DropdownMenuItem<String>(
+                value: j.kdDokter,
+                child: Row(
+                  children: [
+                    const CircleAvatar(
+                      radius: 12,
+                      backgroundColor: Color(0xFFDCFCE7),
+                      child: Icon(Icons.person_rounded, size: 14, color: AppTheme.primaryColor),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        j.nmDokter,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+            onChanged: (_selectedDate == null || _selectedPoliCode == null)
+                ? null
+                : (value) => setState(() => _selectedDokterCode = value),
+            validator: (value) => value == null ? 'Pilih dokter' : null,
+          ),
+          const SizedBox(height: 20),
+
+          _SectionLabel(label: 'Cara Pembayaran', icon: Icons.payment_rounded),
+          const SizedBox(height: 12),
+
+          // Cara bayar toggle
+          Row(
+            children: _caraBayarList.map((item) {
+              final isSelected = _selectedCaraBayar == item['code'];
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedCaraBayar = item['code']!),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: EdgeInsets.only(
+                      right: item['code'] == 'BPJ' ? 8 : 0,
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppTheme.primaryColor.withValues(alpha: 0.08)
+                          : Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected ? AppTheme.primaryColor : Colors.grey[200]!,
+                        width: isSelected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          isSelected
+                              ? Icons.radio_button_checked_rounded
+                              : Icons.radio_button_off_rounded,
+                          size: 16,
+                          color: isSelected ? AppTheme.primaryColor : Colors.grey[400],
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          item['name']!,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected ? AppTheme.primaryColor : Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+
+          if (_selectedCaraBayar == 'BPJ') ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBEB),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.5)),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 15, color: Color(0xFFF59E0B)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'BPJS memerlukan surat rujukan dari Puskesmas atau Dokter Praktek. Akan ditanyakan saat konfirmasi.',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF78350F), height: 1.4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 20),
+
+          _SectionLabel(label: 'Keluhan', icon: Icons.description_rounded),
+          const SizedBox(height: 12),
+
+          TextFormField(
+            controller: _keluhanController,
+            maxLines: 3,
+            decoration: fieldDecor(
+              label: 'Keluhan / Alasan (Opsional)',
+              icon: Icons.description_rounded,
+              hint: 'Contoh: Pusing, Batuk, Kontrol rutin...',
+            ).copyWith(
+              alignLabelWithHint: true,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.wifi_off_rounded, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: TextStyle(color: Colors.grey[600], fontSize: 15),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => context.read<JadwalBloc>().add(LoadJadwal()),
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Coba Lagi'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  final IconData icon;
+
+  const _SectionLabel({required this.label, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 16,
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Icon(icon, size: 15, color: AppTheme.primaryColor),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF334155),
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -676,9 +813,7 @@ class _BpjsRujukanDialog extends StatelessWidget {
                   backgroundColor: AppTheme.primaryColor,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
@@ -693,9 +828,7 @@ class _BpjsRujukanDialog extends StatelessWidget {
                   foregroundColor: const Color(0xFF6366F1),
                   side: const BorderSide(color: Color(0xFF6366F1)),
                   padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
@@ -704,10 +837,7 @@ class _BpjsRujukanDialog extends StatelessWidget {
               width: double.infinity,
               child: TextButton.icon(
                 onPressed: () => Navigator.pop(context, 'puskesmas'),
-                icon: Icon(
-                  Icons.directions_walk_rounded,
-                  color: Colors.grey[600],
-                ),
+                icon: Icon(Icons.directions_walk_rounded, color: Colors.grey[600]),
                 label: Text(
                   'Belum — Ke Puskesmas / Dokter Dulu',
                   style: TextStyle(color: Colors.grey[600]),
@@ -758,10 +888,7 @@ class _JamRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          hari,
-          style: const TextStyle(fontSize: 13, color: Color(0xFF374151)),
-        ),
+        Text(hari, style: const TextStyle(fontSize: 13, color: Color(0xFF374151))),
         Text(
           jam,
           style: const TextStyle(
