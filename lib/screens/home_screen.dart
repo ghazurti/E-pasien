@@ -38,12 +38,9 @@ class _HomeScreenState extends State<HomeScreen>
     super.initState();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
+      duration: const Duration(milliseconds: 600),
     );
-    _fadeAnim = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOut,
-    );
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _animController.forward();
     context.read<NewsBloc>().add(FetchNews());
   }
@@ -54,11 +51,7 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  void _onItemTapped(int index) => setState(() => _selectedIndex = index);
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen>
     ];
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: const Color(0xFFF1F5F9),
       body: pages[_selectedIndex],
       bottomNavigationBar: _buildBottomNav(),
     );
@@ -82,8 +75,8 @@ class _HomeScreenState extends State<HomeScreen>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.15),
-            blurRadius: 20,
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 16,
             offset: const Offset(0, -4),
           ),
         ],
@@ -112,11 +105,11 @@ class _HomeScreenState extends State<HomeScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 18 : 14,
+          horizontal: isSelected ? 20 : 14,
           vertical: 8,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryColor.withOpacity(0.12) : Colors.transparent,
+          color: isSelected ? AppTheme.primaryColor.withValues(alpha: 0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -124,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             Icon(
               isSelected ? activeIcon : inactiveIcon,
-              color: isSelected ? AppTheme.primaryColor : Colors.grey[500],
+              color: isSelected ? AppTheme.primaryColor : Colors.grey[400],
               size: 24,
             ),
             const SizedBox(height: 2),
@@ -133,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen>
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                color: isSelected ? AppTheme.primaryColor : Colors.grey[500],
+                color: isSelected ? AppTheme.primaryColor : Colors.grey[400],
               ),
             ),
           ],
@@ -151,10 +144,10 @@ class _HomeScreenState extends State<HomeScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
-              _buildQuickStats(),
+              _buildQuickActions(),
               _buildNewsSection(),
               _buildMenuSection(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
             ],
           ),
         ),
@@ -168,15 +161,14 @@ class _HomeScreenState extends State<HomeScreen>
       decoration: const BoxDecoration(
         gradient: AppTheme.headerGradient,
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
         ),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              // Logo kecil di header
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
@@ -185,75 +177,60 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 child: Image.asset(
                   'assets/images/logo.png',
-                  width: 28,
-                  height: 28,
+                  width: 26,
+                  height: 26,
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => const Icon(
                     Icons.local_hospital_rounded,
-                    size: 22,
+                    size: 20,
                     color: AppTheme.primaryColor,
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
+              const Text(
                 'SiSehat Bau-Bau',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white70,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               const Spacer(),
-              // Notification
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.notifications_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
+                child: const Icon(Icons.notifications_rounded, color: Colors.white, size: 22),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           Row(
             children: [
-              // Avatar
               BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, state) {
                   if (state is AuthAuthenticated) {
-                    final nameParts = state.pasien.nmPasien.split(' ');
-                    final initials = nameParts.length >= 2
-                        ? '${nameParts[0][0]}${nameParts[1][0]}'
-                        : nameParts[0].substring(0, 1);
+                    final parts = state.pasien.nmPasien.trim().split(' ');
+                    final initials = parts.length >= 2
+                        ? '${parts[0][0]}${parts[1][0]}'
+                        : parts[0].substring(0, 1);
                     return Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppTheme.secondaryColor,
-                          width: 2.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
-                            blurRadius: 8,
-                          ),
-                        ],
+                        border: Border.all(color: Colors.white54, width: 2.5),
                       ),
                       child: CircleAvatar(
-                        radius: 28,
-                        backgroundColor: Colors.white,
+                        radius: 26,
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
                         child: Text(
                           initials.toUpperCase(),
                           style: const TextStyle(
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryColor,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -268,13 +245,13 @@ class _HomeScreenState extends State<HomeScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Selamat Datang 👋',
+                      'Selamat Datang',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
-                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.75),
+                        fontSize: 12,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     BlocBuilder<AuthBloc, AuthState>(
                       builder: (context, state) {
                         if (state is AuthAuthenticated) {
@@ -282,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen>
                             state.pasien.nmPasien,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
+                              fontSize: 17,
                               fontWeight: FontWeight.bold,
                             ),
                             maxLines: 1,
@@ -302,39 +279,37 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildQuickStats() {
+  Widget _buildQuickActions() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
         children: [
-          _QuickStatCard(
+          _QuickAction(
             icon: Icons.event_available_rounded,
-            label: 'Booking Poli',
+            label: 'Booking',
             color: AppTheme.primaryColor,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const BookingScreen()),
-            ),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookingScreen())),
           ),
           const SizedBox(width: 10),
-          _QuickStatCard(
+          _QuickAction(
+            icon: Icons.queue_rounded,
+            label: 'Antrian',
+            color: const Color(0xFFEA580C),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AntrianScreen())),
+          ),
+          const SizedBox(width: 10),
+          _QuickAction(
             icon: Icons.bed_rounded,
-            label: 'Cek Kamar',
-            color: AppTheme.secondaryDark,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const KamarScreen()),
-            ),
+            label: 'Kamar',
+            color: const Color(0xFFF59E0B),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const KamarScreen())),
           ),
           const SizedBox(width: 10),
-          _QuickStatCard(
-            icon: Icons.receipt_long_rounded,
-            label: 'Kartu Kontrol',
+          _QuickAction(
+            icon: Icons.assignment_ind_rounded,
+            label: 'Kontrol',
             color: const Color(0xFF6366F1),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SuratKontrolScreen()),
-            ),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SuratKontrolScreen())),
           ),
         ],
       ),
@@ -346,30 +321,12 @@ class _HomeScreenState extends State<HomeScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 16, 8),
+          padding: const EdgeInsets.fromLTRB(20, 20, 16, 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.accentGradient,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Berita Terkini',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              TextButton.icon(
+              _SectionTitle(title: 'Berita Terkini'),
+              TextButton(
                 onPressed: () async {
                   final url = Uri.parse('https://www.rsudkotabaubau.com/article');
                   try {
@@ -378,52 +335,39 @@ class _HomeScreenState extends State<HomeScreen>
                     }
                   } catch (_) {}
                 },
-                icon: const Icon(Icons.open_in_new_rounded, size: 14),
-                label: const Text('Semua'),
                 style: TextButton.styleFrom(
                   foregroundColor: AppTheme.primaryColor,
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
+                child: const Text('Lihat Semua'),
               ),
             ],
           ),
         ),
         SizedBox(
-          height: 175,
+          height: 170,
           child: BlocBuilder<NewsBloc, NewsState>(
             builder: (context, state) {
               if (state is NewsLoading) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppTheme.primaryColor),
-                );
+                return const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor));
               } else if (state is NewsLoaded) {
                 if (state.news.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'Belum ada berita',
-                      style: TextStyle(color: Colors.grey[500]),
-                    ),
-                  );
+                  return Center(child: Text('Belum ada berita', style: TextStyle(color: Colors.grey[500])));
                 }
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   scrollDirection: Axis.horizontal,
                   itemCount: state.news.length > 5 ? 5 : state.news.length,
-                  itemBuilder: (context, index) {
-                    return _NewsCard(news: state.news[index]);
-                  },
+                  itemBuilder: (context, index) => _NewsCard(news: state.news[index]),
                 );
               } else if (state is NewsError) {
                 return Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.wifi_off_rounded, color: Colors.grey[400], size: 36),
-                      const SizedBox(height: 8),
-                      Text('Gagal memuat berita', style: TextStyle(color: Colors.grey[500])),
+                      Icon(Icons.wifi_off_rounded, color: Colors.grey[400], size: 32),
+                      const SizedBox(height: 6),
+                      Text('Gagal memuat berita', style: TextStyle(color: Colors.grey[500], fontSize: 13)),
                     ],
                   ),
                 );
@@ -437,189 +381,54 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildMenuSection() {
+    final menus = [
+      _MenuData('Jadwal\nDokter', Icons.calendar_month_rounded, const Color(0xFF009B3A), const Color(0xFFE8F5EE),
+          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const JadwalScreen()))),
+      _MenuData('Booking\nPoli', Icons.medical_services_rounded, const Color(0xFFD97706), const Color(0xFFFEF3C7),
+          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookingScreen()))),
+      _MenuData('Riwayat\nPeriksa', Icons.history_rounded, const Color(0xFF6366F1), const Color(0xFFEEF2FF),
+          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookingHistoryScreen()))),
+      _MenuData('Catatan\nMedis', Icons.folder_special_rounded, const Color(0xFFE11D48), const Color(0xFFFFF1F2),
+          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RekamMedisScreen()))),
+      _MenuData('Hasil\nLab', Icons.science_rounded, const Color(0xFF0D9488), const Color(0xFFF0FDFA),
+          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LabResultsScreen()))),
+      _MenuData('Hasil\nRadiologi', Icons.monitor_heart_rounded, const Color(0xFF0284C7), const Color(0xFFE0F2FE),
+          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RadiologyResultsScreen()))),
+      _MenuData('Riwayat\nObat', Icons.medication_rounded, const Color(0xFF7C3AED), const Color(0xFFF5F3FF),
+          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RiwayatObatScreen()))),
+      _MenuData('Status\nAntrian', Icons.queue_rounded, const Color(0xFFEA580C), const Color(0xFFFFF7ED),
+          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AntrianScreen()))),
+      _MenuData('Cek\nKamar', Icons.bed_rounded, const Color(0xFFF59E0B), const Color(0xFFFFFBEB),
+          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const KamarScreen()))),
+      _MenuData('Kartu\nKontrol', Icons.assignment_ind_rounded, const Color(0xFF4F46E5), const Color(0xFFEEF2FF),
+          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SuratKontrolScreen()))),
+      _MenuData('Info\nRSUD', Icons.info_rounded, const Color(0xFF0891B2), const Color(0xFFECFEFF),
+          () async {
+            final url = Uri.parse('https://www.rsudkotabaubau.com');
+            try {
+              if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
+            } catch (_) {}
+          }),
+    ];
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 4,
-                height: 20,
-                decoration: BoxDecoration(
-                  gradient: AppTheme.accentGradient,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Layanan',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          GridView.count(
+          const _SectionTitle(title: 'Layanan'),
+          const SizedBox(height: 14),
+          GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 3,
-            childAspectRatio: 0.88,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            children: [
-              _MenuCard(
-                title: 'Jadwal\nDokter',
-                icon: Icons.calendar_month_rounded,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF009B3A), Color(0xFF00C94A)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const JadwalScreen()),
-                ),
-              ),
-              _MenuCard(
-                title: 'Booking\nPoli',
-                icon: Icons.medical_services_rounded,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFF5C800), Color(0xFFFFD840)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                iconColor: const Color(0xFF7A5F00),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BookingScreen()),
-                ),
-              ),
-              _MenuCard(
-                title: 'Riwayat\nPeriksa',
-                icon: Icons.history_rounded,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BookingHistoryScreen()),
-                ),
-              ),
-              _MenuCard(
-                title: 'Catatan\nMedis',
-                icon: Icons.folder_special_rounded,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFF43F5E), Color(0xFFFF6B6B)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RekamMedisScreen()),
-                ),
-              ),
-              _MenuCard(
-                title: 'Hasil\nLab',
-                icon: Icons.science_rounded,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF007A2E), Color(0xFF009B3A)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LabResultsScreen()),
-                ),
-              ),
-              _MenuCard(
-                title: 'Hasil\nRadiologi',
-                icon: Icons.monitor_heart_rounded,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0EA5E9), Color(0xFF38BDF8)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RadiologyResultsScreen()),
-                ),
-              ),
-              _MenuCard(
-                title: 'Cek\nKamar',
-                icon: Icons.bed_rounded,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFC9A500), Color(0xFFF5C800)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                iconColor: const Color(0xFF5A4700),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const KamarScreen()),
-                ),
-              ),
-              _MenuCard(
-                title: 'Kartu\nKontrol',
-                icon: Icons.assignment_ind_rounded,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SuratKontrolScreen()),
-                ),
-              ),
-              _MenuCard(
-                title: 'Info\nRSUD',
-                icon: Icons.info_rounded,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF14B8A6), Color(0xFF0D9488)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                onTap: () async {
-                  final url = Uri.parse('https://www.rsudkotabaubau.com');
-                  try {
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
-                    }
-                  } catch (_) {}
-                },
-              ),
-              _MenuCard(
-                title: 'Status\nAntrian',
-                icon: Icons.queue_rounded,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFEA580C), Color(0xFFF97316)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AntrianScreen()),
-                ),
-              ),
-              _MenuCard(
-                title: 'Riwayat\nObat',
-                icon: Icons.medication_rounded,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF7C3AED), Color(0xFF9F67FF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RiwayatObatScreen()),
-                ),
-              ),
-            ],
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              childAspectRatio: 0.82,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 10,
+            ),
+            itemCount: menus.length,
+            itemBuilder: (context, index) => _MenuCard(data: menus[index]),
           ),
         ],
       ),
@@ -627,14 +436,59 @@ class _HomeScreenState extends State<HomeScreen>
   }
 }
 
-// === QUICK STAT CARD ===
-class _QuickStatCard extends StatelessWidget {
+// ─── Data class ───────────────────────────────────────────────────────────────
+
+class _MenuData {
+  final String title;
+  final IconData icon;
+  final Color iconColor;
+  final Color bgColor;
+  final VoidCallback onTap;
+
+  const _MenuData(this.title, this.icon, this.iconColor, this.bgColor, this.onTap);
+}
+
+// ─── Section Title ────────────────────────────────────────────────────────────
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  const _SectionTitle({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 18,
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Quick Action ─────────────────────────────────────────────────────────────
+
+class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
   final VoidCallback onTap;
 
-  const _QuickStatCard({
+  const _QuickAction({
     required this.icon,
     required this.label,
     required this.color,
@@ -647,27 +501,23 @@ class _QuickStatCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.25), width: 1.5),
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: color, size: 18),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              Icon(icon, color: color, size: 22),
+              const SizedBox(height: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: color,
                 ),
               ),
             ],
@@ -678,10 +528,70 @@ class _QuickStatCard extends StatelessWidget {
   }
 }
 
-// === NEWS CARD ===
+// ─── Menu Card ────────────────────────────────────────────────────────────────
+
+class _MenuCard extends StatelessWidget {
+  final _MenuData data;
+  const _MenuCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: data.onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: data.bgColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(data.icon, color: data.iconColor, size: 22),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  data.title,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF334155),
+                    height: 1.25,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── News Card ────────────────────────────────────────────────────────────────
+
 class _NewsCard extends StatelessWidget {
   final News news;
-
   const _NewsCard({required this.news});
 
   @override
@@ -690,22 +600,20 @@ class _NewsCard extends StatelessWidget {
       onTap: () async {
         final url = Uri.parse(news.url);
         try {
-          if (await canLaunchUrl(url)) {
-            await launchUrl(url, mode: LaunchMode.externalApplication);
-          }
+          if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
         } catch (_) {}
       },
       child: Container(
-        width: 210,
-        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        width: 200,
+        margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -713,31 +621,19 @@ class _NewsCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
               child: Image.network(
                 news.imageUrl,
-                height: 78,
+                height: 90,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 78,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppTheme.primaryColor.withOpacity(0.15),
-                          AppTheme.secondaryColor.withOpacity(0.15),
-                        ],
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.article_rounded,
-                      size: 32,
-                      color: AppTheme.primaryColor,
-                    ),
-                  );
-                },
+                errorBuilder: (_, __, ___) => Container(
+                  height: 90,
+                  color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                  child: const Center(
+                    child: Icon(Icons.article_rounded, size: 30, color: AppTheme.primaryColor),
+                  ),
+                ),
               ),
             ),
             Padding(
@@ -748,12 +644,9 @@ class _NewsCard extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 3,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -766,10 +659,7 @@ class _NewsCard extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      Text(
-                        news.date,
-                        style: TextStyle(fontSize: 9, color: Colors.grey[500]),
-                      ),
+                      Text(news.date, style: TextStyle(fontSize: 9, color: Colors.grey[400])),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -777,9 +667,9 @@ class _NewsCard extends StatelessWidget {
                     news.title,
                     style: const TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       height: 1.3,
-                      color: AppTheme.textDark,
+                      color: Color(0xFF1E293B),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -788,85 +678,6 @@ class _NewsCard extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// === MENU CARD ===
-class _MenuCard extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final LinearGradient gradient;
-  final Color? iconColor;
-  final VoidCallback onTap;
-
-  const _MenuCard({
-    required this.title,
-    required this.icon,
-    required this.gradient,
-    required this.onTap,
-    this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: gradient.colors.first.withOpacity(0.15),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: gradient,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: gradient.colors.first.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  icon,
-                  size: 26,
-                  color: iconColor ?? Colors.white,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textDark,
-                  height: 1.2,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
         ),
       ),
     );
