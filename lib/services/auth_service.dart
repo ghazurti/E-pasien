@@ -9,13 +9,36 @@ class AuthService {
   final StorageService _storageService = StorageService();
   final CacheService _cacheService = CacheService();
 
+  static const _timeout = Duration(seconds: 10);
+
+  bool _isTokenExpired(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return true;
+      final normalized = base64Url.normalize(parts[1]);
+      final payload = jsonDecode(utf8.decode(base64Url.decode(normalized)));
+      final exp = payload['exp'] as int;
+      return DateTime.now().isAfter(
+        DateTime.fromMillisecondsSinceEpoch(exp * 1000),
+      );
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<String?> getToken() async {
+    return await _storageService.getToken();
+  }
+
   Future<Map<String, dynamic>> login(LoginRequest request) async {
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.login}'),
-        headers: ApiConfig.headers(),
-        body: jsonEncode(request.toJson()),
-      );
+      final response = await http
+          .post(
+            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.login}'),
+            headers: ApiConfig.headers(),
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(_timeout);
 
       final data = jsonDecode(response.body);
 
@@ -44,11 +67,13 @@ class AuthService {
     try {
       final token = await _storageService.getToken();
 
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.changePassword}'),
-        headers: ApiConfig.headers(token: token),
-        body: jsonEncode(request.toJson()),
-      );
+      final response = await http
+          .post(
+            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.changePassword}'),
+            headers: ApiConfig.headers(token: token),
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(_timeout);
 
       final data = jsonDecode(response.body);
 
@@ -72,7 +97,13 @@ class AuthService {
 
   Future<bool> isAuthenticated() async {
     final token = await _storageService.getToken();
-    return token != null;
+    if (token == null) return false;
+    if (_isTokenExpired(token)) {
+      await _storageService.clearAll();
+      await _cacheService.clearAll();
+      return false;
+    }
+    return true;
   }
 
   Future<Pasien?> getCurrentUser() async {

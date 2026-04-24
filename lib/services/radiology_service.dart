@@ -9,6 +9,8 @@ class RadiologyService {
   final StorageService _storageService = StorageService();
   final CacheService _cacheService = CacheService();
 
+  static const _timeout = Duration(seconds: 10);
+
   Future<List<RadiologyOrder>> getRadiologyHistory({
     bool refresh = false,
   }) async {
@@ -24,10 +26,12 @@ class RadiologyService {
 
     try {
       final token = await _storageService.getToken();
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.radiologyResults}'),
-        headers: ApiConfig.headers(token: token),
-      );
+      final response = await http
+          .get(
+            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.radiologyResults}'),
+            headers: ApiConfig.headers(token: token),
+          )
+          .timeout(_timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -50,22 +54,13 @@ class RadiologyService {
   Future<List<RadiologyResult>> getRadiologyDetail(String noRawat) async {
     try {
       final token = await _storageService.getToken();
-      // URL encode no_rawat to handle slashes
       final encodedNoRawat = Uri.encodeComponent(noRawat);
       final url =
           '${ApiConfig.baseUrl}${ApiConfig.radiologyResults}/$encodedNoRawat';
 
-      print('🔍 Radiology Detail Request: $url');
-      print('🔍 no_rawat (original): $noRawat');
-      print('🔍 no_rawat (encoded): $encodedNoRawat');
-
-      final response = await http.get(
-        Uri.parse(url),
-        headers: ApiConfig.headers(token: token),
-      );
-
-      print('📡 Radiology Response Status: ${response.statusCode}');
-      print('📡 Radiology Response Body: ${response.body}');
+      final response = await http
+          .get(Uri.parse(url), headers: ApiConfig.headers(token: token))
+          .timeout(_timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

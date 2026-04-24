@@ -12,6 +12,8 @@ class ApiConfig {
   static const String cancelBooking = '/booking/cancel';
   static const String news = '/news';
   static const String radiologyResults = '/radiology-results';
+  static const String antrian = '/antrian';
+  static const String riwayatObat = '/riwayat-obat';
 
   // Headers
   static Map<String, String> headers({String? token}) {

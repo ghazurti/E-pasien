@@ -1,6 +1,8 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_epasien/services/notification_service.dart';
 import 'package:flutter_epasien/blocs/auth/auth_bloc.dart';
 import 'package:flutter_epasien/blocs/auth/auth_event.dart';
 import 'package:flutter_epasien/blocs/auth/auth_state.dart';
@@ -23,6 +25,8 @@ import 'package:flutter_epasien/widgets/loading_widget.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  await NotificationService().initialize();
   await initializeDateFormatting('id_ID', null);
   runApp(const MyApp());
 }

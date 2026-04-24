@@ -11,6 +11,8 @@ class ApiService {
   final StorageService _storageService = StorageService();
   final CacheService _cacheService = CacheService();
 
+  static const _timeout = Duration(seconds: 10);
+
   // Get Jadwal Dokter
   Future<List<Jadwal>> getJadwal({bool refresh = false}) async {
     // Try cache first if not refreshing
@@ -25,10 +27,12 @@ class ApiService {
     try {
       final token = await _storageService.getToken();
 
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.jadwal}'),
-        headers: ApiConfig.headers(token: token),
-      );
+      final response = await http
+          .get(
+            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.jadwal}'),
+            headers: ApiConfig.headers(token: token),
+          )
+          .timeout(_timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -57,11 +61,13 @@ class ApiService {
     try {
       final token = await _storageService.getToken();
 
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.booking}'),
-        headers: ApiConfig.headers(token: token),
-        body: jsonEncode(request.toJson()),
-      );
+      final response = await http
+          .post(
+            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.booking}'),
+            headers: ApiConfig.headers(token: token),
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(_timeout);
 
       final data = jsonDecode(response.body);
 
@@ -100,10 +106,12 @@ class ApiService {
     try {
       final token = await _storageService.getToken();
 
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.bookingHistory}'),
-        headers: ApiConfig.headers(token: token),
-      );
+      final response = await http
+          .get(
+            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.bookingHistory}'),
+            headers: ApiConfig.headers(token: token),
+          )
+          .timeout(_timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -138,11 +146,13 @@ class ApiService {
         'kd_poli': booking.kdPoli,
       };
 
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.checkIn}'),
-        headers: ApiConfig.headers(token: token),
-        body: jsonEncode(checkInPayload),
-      );
+      final response = await http
+          .post(
+            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.checkIn}'),
+            headers: ApiConfig.headers(token: token),
+            body: jsonEncode(checkInPayload),
+          )
+          .timeout(_timeout);
 
       final data = jsonDecode(response.body);
 
@@ -171,11 +181,13 @@ class ApiService {
         'kd_poli': booking.kdPoli,
       };
 
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.cancelBooking}'),
-        headers: ApiConfig.headers(token: token),
-        body: jsonEncode(cancelPayload),
-      );
+      final response = await http
+          .post(
+            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.cancelBooking}'),
+            headers: ApiConfig.headers(token: token),
+            body: jsonEncode(cancelPayload),
+          )
+          .timeout(_timeout);
 
       final data = jsonDecode(response.body);
 
@@ -204,10 +216,12 @@ class ApiService {
     }
 
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/kamar'),
-        headers: ApiConfig.headers(),
-      );
+      final response = await http
+          .get(
+            Uri.parse('${ApiConfig.baseUrl}/kamar'),
+            headers: ApiConfig.headers(),
+          )
+          .timeout(_timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

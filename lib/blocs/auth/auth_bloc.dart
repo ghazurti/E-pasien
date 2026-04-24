@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../models/pasien.dart';
 import '../../services/auth_service.dart';
+import '../../services/notification_service.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -33,6 +34,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         pasien: result['pasien'] as Pasien,
         token: result['token'] as String,
       ));
+      // Register FCM token ke backend (non-blocking)
+      NotificationService().registerTokenToBackend();
     } else {
       emit(AuthError(message: result['message'] as String));
       emit(const AuthUnauthenticated());
@@ -55,11 +58,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     if (isAuthenticated) {
       final pasien = await _authService.getCurrentUser();
-      if (pasien != null) {
-        emit(AuthAuthenticated(
-          pasien: pasien,
-          token: '', // Token already stored
-        ));
+      final token = await _authService.getToken();
+      if (pasien != null && token != null) {
+        emit(AuthAuthenticated(pasien: pasien, token: token));
+        NotificationService().registerTokenToBackend();
       } else {
         emit(const AuthUnauthenticated());
       }

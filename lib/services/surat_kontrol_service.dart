@@ -11,6 +11,8 @@ class SuratKontrolService {
   final StorageService _storageService = StorageService();
   final CacheService _cacheService = CacheService();
 
+  static const _timeout = Duration(seconds: 10);
+
   Future<List<SuratKontrol>> getSuratKontrolList({bool refresh = false}) async {
     // Try cache first if not refreshing
     if (!refresh) {
@@ -26,13 +28,15 @@ class SuratKontrolService {
       throw Exception('Token tidak ditemukan');
     }
 
-    final response = await http.get(
-      Uri.parse('${ApiConfig.baseUrl}/surat-kontrol'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await http
+        .get(
+          Uri.parse('${ApiConfig.baseUrl}/surat-kontrol'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        )
+        .timeout(_timeout);
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -60,10 +64,12 @@ class SuratKontrolService {
       throw Exception('Token tidak ditemukan');
     }
 
-    final response = await http.get(
-      Uri.parse('${ApiConfig.baseUrl}/surat-kontrol/$noSurat/pdf'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
+    final response = await http
+        .get(
+          Uri.parse('${ApiConfig.baseUrl}/surat-kontrol/$noSurat/pdf'),
+          headers: {'Authorization': 'Bearer $token'},
+        )
+        .timeout(_timeout);
 
     if (response.statusCode == 200) {
       // Save PDF to device

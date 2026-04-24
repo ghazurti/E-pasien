@@ -9,6 +9,8 @@ class LabService {
   final StorageService _storageService = StorageService();
   final CacheService _cacheService = CacheService();
 
+  static const _timeout = Duration(seconds: 10);
+
   Future<List<LabOrder>> getLabOrders({bool refresh = false}) async {
     // Try cache first if not refreshing
     if (!refresh) {
@@ -25,13 +27,15 @@ class LabService {
       throw Exception('Token tidak ditemukan');
     }
 
-    final response = await http.get(
-      Uri.parse('${ApiConfig.baseUrl}/lab-results'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await http
+        .get(
+          Uri.parse('${ApiConfig.baseUrl}/lab-results'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        )
+        .timeout(_timeout);
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -76,13 +80,15 @@ class LabService {
     // URL encode no_rawat to handle slashes
     final encodedNoRawat = Uri.encodeComponent(noRawat);
 
-    final response = await http.get(
-      Uri.parse('${ApiConfig.baseUrl}/lab-results/$encodedNoRawat'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await http
+        .get(
+          Uri.parse('${ApiConfig.baseUrl}/lab-results/$encodedNoRawat'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        )
+        .timeout(_timeout);
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -100,7 +106,6 @@ class LabService {
         throw Exception(data['message'] ?? 'Gagal mengambil hasil lab');
       }
     } else {
-      print('Lab detail error: ${response.statusCode} - ${response.body}');
       throw Exception('Gagal terhubung ke server (${response.statusCode})');
     }
   }

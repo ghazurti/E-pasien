@@ -19,10 +19,12 @@ class NewsService {
     if (cached != null) return cached;
 
     try {
-      final response = await _client.get(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.news}'),
-        headers: ApiConfig.headers(),
-      );
+      final response = await _client
+          .get(
+            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.news}'),
+            headers: ApiConfig.headers(),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);

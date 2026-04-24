@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:open_file/open_file.dart';
+import '../blocs/auth/auth_bloc.dart';
+import '../blocs/auth/auth_state.dart';
 import '../blocs/lab/lab_bloc.dart';
 import '../blocs/lab/lab_event.dart';
 import '../blocs/lab/lab_state.dart';
 import '../config/theme.dart';
 import '../models/lab_result.dart';
+import '../utils/lab_pdf_generator.dart';
 import '../widgets/loading_widget.dart';
 
 class LabResultsScreen extends StatefulWidget {
@@ -333,6 +337,51 @@ class _LabResultsScreenState extends State<LabResultsScreen> {
     );
   }
 
+  Future<void> _downloadPdf(List<LabResult> results) async {
+    final authState = context.read<AuthBloc>().state;
+    String nmPasien = '';
+    String noRm = '';
+    if (authState is AuthAuthenticated) {
+      nmPasien = authState.pasien.nmPasien;
+      noRm = authState.pasien.noRkmMedis;
+    }
+
+    final firstData = results.firstWhere(
+      (r) => r.nilai.trim().isNotEmpty,
+      orElse: () => results.first,
+    );
+
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Membuat PDF...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      final path = await LabPdfGenerator.generate(
+        results: results,
+        nmPasien: nmPasien,
+        noRm: noRm,
+        tglPeriksa: firstData.tglPeriksa,
+        nmDokter: firstData.nmDokter,
+      );
+
+      if (mounted) {
+        await OpenFile.open(path);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal membuat PDF: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildLabResultsView(List<LabResult> results, String noRawat) {
     return Column(
       children: [
@@ -365,6 +414,13 @@ class _LabResultsScreenState extends State<LabResultsScreen> {
                     ),
                   ],
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.picture_as_pdf_rounded),
+                color: const Color(0xFFDC2626),
+                iconSize: 28,
+                tooltip: 'Download PDF',
+                onPressed: results.isEmpty ? null : () => _downloadPdf(results),
               ),
             ],
           ),

@@ -17,6 +17,8 @@ import 'rekam_medis_screen.dart';
 import 'surat_kontrol_screen.dart';
 import 'kamar_screen.dart';
 import 'radiology_results_screen.dart';
+import 'antrian_screen.dart';
+import 'riwayat_obat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -590,6 +592,32 @@ class _HomeScreenState extends State<HomeScreen>
                     }
                   } catch (_) {}
                 },
+              ),
+              _MenuCard(
+                title: 'Status\nAntrian',
+                icon: Icons.queue_rounded,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFEA580C), Color(0xFFF97316)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AntrianScreen()),
+                ),
+              ),
+              _MenuCard(
+                title: 'Riwayat\nObat',
+                icon: Icons.medication_rounded,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF7C3AED), Color(0xFF9F67FF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RiwayatObatScreen()),
+                ),
               ),
             ],
           ),

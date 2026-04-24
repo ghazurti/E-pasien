@@ -20,10 +20,12 @@ class RekamMedisService {
     }
 
     final token = await _storageService.getToken();
-    final response = await http.get(
-      Uri.parse('${ApiConfig.baseUrl}/rekam-medis/history'),
-      headers: ApiConfig.headers(token: token),
-    );
+    final response = await http
+        .get(
+          Uri.parse('${ApiConfig.baseUrl}/rekam-medis/history'),
+          headers: ApiConfig.headers(token: token),
+        )
+        .timeout(const Duration(seconds: 10));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);

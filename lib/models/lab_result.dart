@@ -31,6 +31,7 @@ class LabResult {
   final String noRawat;
   final String tglPeriksa;
   final String jam;
+  final String nmDokter;
   final String nmPerawatan;
   final String nilai;
   final String nilaiRujukan;
@@ -41,6 +42,7 @@ class LabResult {
     required this.noRawat,
     required this.tglPeriksa,
     required this.jam,
+    required this.nmDokter,
     required this.nmPerawatan,
     required this.nilai,
     required this.nilaiRujukan,
@@ -53,6 +55,7 @@ class LabResult {
       noRawat: json['no_rawat'] ?? '',
       tglPeriksa: json['tgl_periksa'] ?? '',
       jam: json['jam'] ?? '',
+      nmDokter: json['nm_dokter'] ?? '',
       nmPerawatan: json['nm_perawatan'] ?? '',
       nilai: json['nilai'] ?? '',
       nilaiRujukan: json['nilai_rujukan'] ?? '',
@@ -108,7 +111,7 @@ class LabResult {
     return false;
   }
 
-  // Status: 'high', 'low', or 'normal'
+  // Status: 'critical', 'high', 'low', or 'normal'
   String get status {
     final val = numericValue;
     if (val == null) return 'normal';
@@ -116,6 +119,10 @@ class LabResult {
     final min = minNormal;
     final max = maxNormal;
 
+    if (min != null && max != null && max != double.infinity) {
+      final range = max - min;
+      if (val < min - range || val > max + range) return 'critical';
+    }
     if (min != null && val < min) return 'low';
     if (max != null && val > max) return 'high';
     return 'normal';

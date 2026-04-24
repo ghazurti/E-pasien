@@ -29,7 +29,6 @@ class CacheService {
     if (_memoryCache.containsKey(key)) {
       final entry = _memoryCache[key]!;
       if (!entry.isExpired) {
-        print('✅ Cache HIT (memory): $key');
         return fromJson(entry.data);
       } else {
         _memoryCache.remove(key);
@@ -47,7 +46,6 @@ class CacheService {
         final data = json.decode(jsonString) as Map<String, dynamic>;
         // Update memory cache
         _memoryCache[key] = _CacheEntry(data, expiry);
-        print('✅ Cache HIT (persistent): $key');
         return fromJson(data);
       } else {
         // Expired, remove from persistent storage
@@ -56,7 +54,6 @@ class CacheService {
       }
     }
 
-    print('❌ Cache MISS: $key');
     return null;
   }
 
@@ -69,7 +66,6 @@ class CacheService {
     if (_memoryCache.containsKey(key)) {
       final entry = _memoryCache[key]!;
       if (!entry.isExpired) {
-        print('✅ Cache HIT (memory): $key');
         final list = entry.data['items'] as List;
         return list
             .map((item) => fromJson(item as Map<String, dynamic>))
@@ -91,7 +87,6 @@ class CacheService {
         final list = data['items'] as List;
         // Update memory cache
         _memoryCache[key] = _CacheEntry(data, expiry);
-        print('✅ Cache HIT (persistent): $key');
         return list
             .map((item) => fromJson(item as Map<String, dynamic>))
             .toList();
@@ -101,7 +96,6 @@ class CacheService {
       }
     }
 
-    print('❌ Cache MISS: $key');
     return null;
   }
 
@@ -118,7 +112,6 @@ class CacheService {
     await prefs.setString(key, json.encode(data));
     await prefs.setString('${key}_expiry', expiry.toIso8601String());
 
-    print('💾 Cache SET: $key (expires in ${duration}s)');
   }
 
   /// Set cache list data
@@ -132,7 +125,6 @@ class CacheService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(key);
     await prefs.remove('${key}_expiry');
-    print('🗑️ Cache CLEARED: $key');
   }
 
   /// Clear all cache
@@ -140,7 +132,6 @@ class CacheService {
     _memoryCache.clear();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    print('🗑️ ALL Cache CLEARED');
   }
 
   /// Clear cache by prefix (e.g., 'lab_results_' to clear all lab results)
@@ -156,7 +147,6 @@ class CacheService {
         await prefs.remove(key);
       }
     }
-    print('🗑️ Cache CLEARED by prefix: $prefix');
   }
 
   /// Get cache duration for a key
