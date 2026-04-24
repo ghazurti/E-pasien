@@ -151,6 +151,3 @@ cargo run
 
 ---
 
-## Lisensi
-
-Project ini merupakan sistem internal RSUD Bau-Bau. Seluruh hak cipta dilindungi.
